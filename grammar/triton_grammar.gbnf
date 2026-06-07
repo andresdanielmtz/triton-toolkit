@@ -1,0 +1,192 @@
+root ::= newline* func-def (newline* func-def)* newline*
+
+# ─── Whitespace ───────────────────────────────────────────────────────────────
+newline  ::= "\r\n" | "\n"
+ws       ::= [ \t]*
+wsnl     ::= [ \n\t\r]*
+i1       ::= "    " | "\t"
+i2       ::= "        " | "\t\t"
+i3       ::= "            " | "\t\t\t"
+i4       ::= "                " | "\t\t\t\t"
+i5       ::= "                    " | "\t\t\t\t\t"
+
+# ─── Primitives ───────────────────────────────────────────────────────────────
+name      ::= [a-zA-Z_][a-zA-Z0-9_]*
+number    ::= [0-9]+ ("." [0-9]*)? ([eE][+-]?[0-9]+)? | "0x" [0-9a-fA-F]+
+string    ::= "\"" [^"]* "\"" | "'" [^']* "'"
+fstring   ::= "f\"" [^"]* "\"" | "f'" [^']* "'"
+longstr   ::= "\"\"\"" [^"]* "\"\"\"" | "'''" [^']* "'''"
+none-val  ::= "None"
+true-val  ::= "True"
+false-val ::= "False"
+
+# ─── Decorators ───────────────────────────────────────────────────────────────
+triton-decorator ::= "@triton.autotune(" wsnl argument-list wsnl ")" newline "@triton.heuristics(" wsnl argument-list wsnl ")" newline "@triton.jit(" wsnl argument-list wsnl ")" newline
+                   | "@triton.autotune(" wsnl argument-list wsnl ")" newline "@triton.heuristics(" wsnl argument-list wsnl ")" newline "@triton.jit" newline
+                   | "@triton.autotune(" wsnl argument-list wsnl ")" newline "@triton.jit(" wsnl argument-list wsnl ")" newline
+                   | "@triton.autotune(" wsnl argument-list wsnl ")" newline "@triton.jit" newline
+                   | "@triton.heuristics(" wsnl argument-list wsnl ")" newline "@triton.jit(" wsnl argument-list wsnl ")" newline
+                   | "@triton.heuristics(" wsnl argument-list wsnl ")" newline "@triton.jit" newline
+                   | "@triton.jit(" wsnl argument-list wsnl ")" newline
+                   | "@triton.jit" newline
+
+# ─── Function definition ──────────────────────────────────────────────────────
+func-def  ::= triton-decorator "def" ws name ws "(" ws paramlist ws ")" ws ":" ws newline block1
+
+paramlist ::= (param (ws "," ws param)* (ws ",")?)?
+param     ::= name ws ":" ws annotation ws "=" ws expression
+            | name ws ":" ws annotation
+            | name ws "=" ws expression
+            | name
+            | "*" name
+            | "**" name
+
+annotation ::= name ("." name)*
+
+# ─── Blocks (5 levels) ────────────────────────────────────────────────────────
+blank  ::= ws newline
+block1 ::= (blank | i1 small-stmt ws newline | i1 compound1)+
+block2 ::= (blank | i2 small-stmt ws newline | i2 compound2)+
+block3 ::= (blank | i3 small-stmt ws newline | i3 compound3)+
+block4 ::= (blank | i4 small-stmt ws newline | i4 compound4)+
+block5 ::= (blank | i5 small-stmt ws newline)+
+
+# ─── Compound statements at each level ────────────────────────────────────────
+compound1 ::= if1 | for1 | while1 | with1
+compound2 ::= if2 | for2 | while2 | with2
+compound3 ::= if3 | for3 | while3 | with3
+compound4 ::= if4 | for4 | while4 | with4
+
+# ─── Small statements ─────────────────────────────────────────────────────────
+small-stmt ::= lvalue (ws "," ws lvalue)+ ws "=" ws rhs
+             | lvalue ws assign-op ws rhs
+             | lvalue ws ":" ws annotation ws "=" ws rhs
+             | lvalue ws ":" ws annotation
+             | "return" ws rhs
+             | "return"
+             | "pass"
+             | "assert" ws expression ws "," ws expression
+             | "assert" ws expression
+             | expression
+
+rhs ::= expression (ws "," ws expression)+ (ws ",")?
+      | expression
+
+assign-op ::= "=" | "+=" | "-=" | "*=" | "/=" | "//=" | "%=" | "&=" | "|=" | "^=" | ">>=" | "<<=" | "**="
+
+# ─── Compound statements ──────────────────────────────────────────────────────
+if1    ::= "if" ws expression ws ":" ws newline block2 elif1* else1?
+elif1  ::= i1 "elif" ws expression ws ":" ws newline block2
+else1  ::= i1 "else:" ws newline block2
+for1   ::= "for" ws for-target ws "in" ws expression ws ":" ws newline block2
+while1 ::= "while" ws expression ws ":" ws newline block2
+with1  ::= "with" ws expression ws "as" ws name ws ":" ws newline block2
+         | "with" ws expression ws ":" ws newline block2
+
+if2    ::= "if" ws expression ws ":" ws newline block3 elif2* else2?
+elif2  ::= i2 "elif" ws expression ws ":" ws newline block3
+else2  ::= i2 "else:" ws newline block3
+for2   ::= "for" ws for-target ws "in" ws expression ws ":" ws newline block3
+while2 ::= "while" ws expression ws ":" ws newline block3
+with2  ::= "with" ws expression ws "as" ws name ws ":" ws newline block3
+         | "with" ws expression ws ":" ws newline block3
+
+if3    ::= "if" ws expression ws ":" ws newline block4 elif3* else3?
+elif3  ::= i3 "elif" ws expression ws ":" ws newline block4
+else3  ::= i3 "else:" ws newline block4
+for3   ::= "for" ws for-target ws "in" ws expression ws ":" ws newline block4
+while3 ::= "while" ws expression ws ":" ws newline block4
+with3  ::= "with" ws expression ws "as" ws name ws ":" ws newline block4
+         | "with" ws expression ws ":" ws newline block4
+
+if4    ::= "if" ws expression ws ":" ws newline block5 elif4* else4?
+elif4  ::= i4 "elif" ws expression ws ":" ws newline block5
+else4  ::= i4 "else:" ws newline block5
+for4   ::= "for" ws for-target ws "in" ws expression ws ":" ws newline block5
+while4 ::= "while" ws expression ws ":" ws newline block5
+with4  ::= "with" ws expression ws "as" ws name ws ":" ws newline block5
+         | "with" ws expression ws ":" ws newline block5
+
+for-target ::= lvalue (ws "," ws lvalue)*
+
+# ─── Lvalue ───────────────────────────────────────────────────────────────────
+lvalue         ::= name lvalue-trailer*
+lvalue-trailer ::= "[" ws index-expr ws "]" | "." name
+
+# ─── Expressions ──────────────────────────────────────────────────────────────
+expression    ::= lambda-expr | ternary | bool-or
+lambda-expr   ::= "lambda" ws lambda-params ws ":" ws expression
+                | "lambda" ws ":" ws expression
+lambda-params ::= name (ws "," ws name)*
+ternary       ::= bool-or ws "if" ws bool-or ws "else" ws bool-or
+bool-or       ::= bool-and (ws "or" ws bool-and)*
+bool-and      ::= bool-not (ws "and" ws bool-not)*
+bool-not      ::= "not" ws bool-not | comparison
+comparison    ::= bitwise-or (ws cmp-op ws bitwise-or)*
+cmp-op        ::= "<=" | ">=" | "==" | "!=" | "<" | ">" | "not in" | "in"
+bitwise-or    ::= bitwise-xor (ws "|" ws bitwise-xor)*
+bitwise-xor   ::= bitwise-and (ws "^" ws bitwise-and)*
+bitwise-and   ::= shift (ws "&" ws shift)*
+shift         ::= arith (ws ("<<" | ">>") ws arith)*
+arith         ::= term (ws ("+" | "-") ws term)*
+term          ::= factor (ws ("*" | "/" | "//" | "%" | "@") ws factor)*
+factor        ::= ("+" | "-" | "~") ws factor | power
+power         ::= atom-base trailer* (ws "**" ws factor)?
+
+# ─── Atom ─────────────────────────────────────────────────────────────────────
+atom-base ::= number
+            | longstr
+            | fstring
+            | string
+            | none-val
+            | true-val
+            | false-val
+            | list-expr
+            | list-comp
+            | dict-expr
+            | "(" ws ")"
+            | "(" ws expression ws "," ws ")"
+            | "(" ws expression ws "," ws expression (ws "," ws expression)* (ws ",")? ws ")"
+            | "(" ws expression ws ")"
+            | name
+
+trailer ::= "[" ws index-expr ws "]"
+          | "." name
+          | "(" ws argument-list ws ")"
+
+# ─── Collections ──────────────────────────────────────────────────────────────
+list-expr   ::= "[" ws "]"
+              | "[" ws expression (ws "," ws expression)* (ws ",")? ws "]"
+list-comp   ::= "[" ws expression ws comp-clause+ ws "]"
+comp-clause ::= "for" ws name ws "in" ws expression ws "if" ws expression
+              | "for" ws name ws "in" ws expression
+dict-expr   ::= "{" ws "}"
+              | "{" ws dict-item (ws "," ws dict-item)* (ws ",")? ws "}"
+dict-item   ::= expression ws ":" ws expression | "**" ws expression
+
+# ─── Index ────────────────────────────────────────────────────────────────────
+index-expr   ::= index-item (ws "," ws index-item)*
+index-item   ::= index-atom index-tail* ws ":" ws index-atom index-tail* ws ":" ws index-atom index-tail*
+               | index-atom index-tail* ws ":" ws index-atom index-tail*
+               | index-atom index-tail* ws ":"
+               | ":" ws index-atom index-tail* ws ":" ws index-atom index-tail*
+               | ":" ws ":" ws index-atom index-tail*
+               | ":" ws index-atom index-tail*
+               | ":"
+               | index-atom index-tail*
+
+index-atom ::= name trailer*
+             | number
+             | string
+             | none-val
+             | ("+" | "-" | "~") ws index-atom
+             | "(" ws expression ws ")"
+
+index-tail ::= ws ("+" | "-" | "*" | "//" | "/" | "%") ws index-atom
+
+# ─── Arguments ────────────────────────────────────────────────────────────────
+argument-list ::= (argument (wsnl "," wsnl argument)* (wsnl ",")?)?
+argument      ::= name wsnl "=" wsnl expression
+                | "*" wsnl expression
+                | "**" wsnl expression
+                | expression
