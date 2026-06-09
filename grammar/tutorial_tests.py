@@ -1,3 +1,18 @@
+"""
+
+These tests were based on the Triton tutorials from the documentation: https://triton-lang.org/main/getting-started/tutorials/
+
+Note: For the tutorial tests to run, the grammar must not allow imports.
+
+- So use: func-def (newline* func-def)* newline*
+
+- Instead of:
+root ::= imports newline* func-def (newline* func-def)* newline*
+imports ::= "import triton" newline "import triton.language as tl" newline extra-import*
+extra-import ::= "import " name ("." name)* newline | "from " name ("." name)* " import " name newline 
+
+"""
+
 import xgrammar
 from transformers import AutoTokenizer
 

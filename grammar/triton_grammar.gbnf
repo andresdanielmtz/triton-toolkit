@@ -1,4 +1,7 @@
-root ::= newline* func-def (newline* func-def)* newline*
+root ::= imports newline* func-def (newline* func-def)* newline*
+
+imports ::= "import triton" newline "import triton.language as tl" newline extra-import*
+extra-import ::= "import " name ("." name)* newline | "from " name ("." name)* " import " name newline 
 
 # ─── Whitespace ───────────────────────────────────────────────────────────────
 newline  ::= "\r\n" | "\n"

@@ -1,3 +1,7 @@
+"""
+Test cases to simulate the TritonBench evaluation suite, but in a more controlled way to isolate specific syntax features and edge cases.
+"""
+
 import xgrammar
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
