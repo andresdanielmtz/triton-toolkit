@@ -16,7 +16,7 @@ TC3002B: Toolkits used for finetune LLMs to acomodate for Triton input.
     └── results
 ```
 
-### `compilar/`
+### `compiler/`
 
 Contains the core implementation and validation scripts used to compare generated Triton kernels against their PyTorch equivalents.
 
